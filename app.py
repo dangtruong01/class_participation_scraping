@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 import os
+import tempfile
 import time
 
 app = Flask(__name__)
@@ -16,7 +17,7 @@ def index():
         # Get the input values from the form
         username = request.form['username']
         password = request.form['password']
-        base_url = request.form['base_url']
+        base_url = request.form['discussion_link']
         
         # Call the scraping function with these inputs
         excel_file_path = scrape_data(username, password, base_url)
@@ -111,13 +112,14 @@ def scrape_data(username_input, password_input, base_url):
 
     # Prepare output
     print(classpart_dict)
-    df = pd.DataFrame.from_dict(classpart_dict, orient='index')
-    excel_file_path = os.path.join('output', 'Class_Participation.xlsx')
-    df.to_excel('output/Class_Participation.xlsx')
+    df = pd.DataFrame.from_dict(classpart_dict, orient='index', columns=['Participation Count'])
+    # Create a temporary file to store the Excel file
+    temp_file = tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False)
+    
+    # Save the DataFrame to the Excel file
+    df.to_excel(temp_file.name, index=True)
 
-    # Close the browser
-    driver.quit()
-    return excel_file_path
+    return temp_file.name
 
 if __name__ == '__main__':
     app.run(debug=True)
